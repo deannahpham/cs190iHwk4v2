@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/cs190i_hw4_starter.iml" filepath="$PROJECT_DIR$/cs190i_hw4_starter.iml" />
+      <module fileurl="file://$PROJECT_DIR$/cs190i_hw4_starter2.iml" filepath="$PROJECT_DIR$/cs190i_hw4_starter2.iml" />
     </modules>
   </component>
 </project>

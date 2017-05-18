@@ -1,4 +1,6 @@
-package edu.ucsb.cs.cs190i.samuel_dong.imagetagexplorer;
+package edu.ucsb.cs.cs190i.deannahpham.imagetagexplorer;
+
+import android.support.v4.media.MediaMetadataCompat;
 
 import org.junit.Test;
 
