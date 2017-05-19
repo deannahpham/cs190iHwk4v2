@@ -105,6 +105,7 @@ public class ImageTagDatabaseHelper extends SQLiteOpenHelper {
 
         db.insert("Image", null, values);
         db.close();
+        NotifyListeners();
     }
 
     public void addTag(String tag){
@@ -115,6 +116,7 @@ public class ImageTagDatabaseHelper extends SQLiteOpenHelper {
 
         db.insert("Tag", null, values);
         db.close();
+        NotifyListeners();
     }
 
     public void addLink(int id, int tag_id) {
@@ -126,6 +128,7 @@ public class ImageTagDatabaseHelper extends SQLiteOpenHelper {
 
         db.insert("Link", null, values);
         db.close();
+        NotifyListeners();
     }
 
     public int getImageId(String filename) {

@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Deanna on 5/16/17.
@@ -15,10 +16,10 @@ import java.util.ArrayList;
 
 public class TagAdapter extends RecyclerView.Adapter<TagAdapter.ViewHolder> implements ImageTagDatabaseHelper.OnDatabaseChangeListener {
     private Context context;
-    private ArrayList<String> tagsList;
+    private List<String> tagsList;
 
 
-    public TagAdapter(Context c, ArrayList<String> tags) {
+    public TagAdapter(Context c, List<String> tags) {
         tagsList = tags;
         context = c;
     }

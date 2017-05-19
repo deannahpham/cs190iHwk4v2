@@ -40,6 +40,9 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity implements ImageTagDatabaseHelper.OnDatabaseChangeListener {
 
     private static final String IMAGE_PATH = "/deanna/images/";
+    public int counter= 50;
+
+    public static Context c;
 
     public FloatingActionButton camera;
     public FloatingActionButton gallery;
@@ -52,13 +55,15 @@ public class MainActivity extends AppCompatActivity implements ImageTagDatabaseH
     public final static int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 1034;
 
     private GridLayoutManager manager;
-    final ImageAdapter image_adapter = new ImageAdapter(this);
+    public static ImageAdapter image_adapter = new ImageAdapter(c);
 
+    private Uri currentFileUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         ImageTagDatabaseHelper.Initialize(this);
 
         RecyclerView rv_image = (RecyclerView)findViewById(R.id.rv_image);
@@ -89,21 +94,37 @@ public class MainActivity extends AppCompatActivity implements ImageTagDatabaseH
 
 
     public void onCameraClick(View view) {
-        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        //photoFileName="image"+System.currentTimeMillis()+".jpg";
-        //intent.putExtra(MediaStore.EXTRA_OUTPUT, getPhotoFileUri(photoFileName)); // set the image file name
-        if (intent.resolveActivity(getPackageManager()) != null) {
-            startActivityForResult(intent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
-        }
+        counter++;
+
+        //camera stuff
+        Intent imageIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+
+        String filePath = getExternalFilesDir(Environment.DIRECTORY_PICTURES) + IMAGE_PATH + "photo_"+ counter + ".jpg";
+
+        //folder stuff
+        File image = new File(filePath);
+        image.getParentFile().mkdirs();
+        currentFileUri = Uri.fromFile(image);
+
+        imageIntent.putExtra(MediaStore.EXTRA_OUTPUT, currentFileUri);
+        startActivityForResult(imageIntent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
     }
 
     public void onGalleryClick(View view) {
-        Toast.makeText(this, "In Gallery", Toast.LENGTH_SHORT).show();
+        counter++;
         Intent galleryIntent = new Intent();
         galleryIntent.setType("image/*");
         galleryIntent.setAction(Intent.ACTION_GET_CONTENT);
-        //photoFileName="image"+System.currentTimeMillis()+".jpg";
-        //galleryIntent.putExtra(MediaStore.EXTRA_OUTPUT, getPhotoFileUri(photoFileName));
+
+//        String filePath = getExternalFilesDir(Environment.DIRECTORY_PICTURES) + IMAGE_PATH + "photo_"+ counter + ".jpg";
+//
+//        //folder stuff
+//        File image = new File(filePath);
+//        image.getParentFile().mkdirs();
+//        currentFileUri = Uri.fromFile(image);
+//
+//        galleryIntent.putExtra(MediaStore.EXTRA_OUTPUT, currentFileUri);
+
         startActivityForResult(galleryIntent, PICK_IMAGE_REQUEST);
 
     }
@@ -117,26 +138,11 @@ public class MainActivity extends AppCompatActivity implements ImageTagDatabaseH
                 if (requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE) {
                     if (resultCode == RESULT_OK) {
                         Toast.makeText(this, "Picture was taken!", Toast.LENGTH_SHORT).show();
-//                        File mediaStorageDir = new File(
-//                                getExternalFilesDir(Environment.DIRECTORY_PICTURES), APP_TAG);
-//
-//                        // Return the file target for the photo based on filename
-//                        File file = new File(mediaStorageDir.getPath() + File.separator + photoFileName);
-                        Uri takenPhoto = data.getData();
-                        TagEntryFragment frag = TagEntryFragment.newInstance(takenPhoto);
-                        frag.show(getSupportFragmentManager().beginTransaction(), "tag");
-                        InputStream inputStream;
-                        try {
-                            //address of image on SD card
-                            inputStream = getContentResolver().openInputStream(takenPhoto);
-                            Bitmap image = BitmapFactory.decodeStream(inputStream);
-                            //image_adapter.addImage(image);
 
-                        } catch (IOException ex) {
-                            System.out.println(ex);
-                            Toast.makeText(this, "Unable to open image", Toast.LENGTH_LONG).show();
+                        if (currentFileUri != null) {
+                            TagEntryFragment frag = TagEntryFragment.newInstance(currentFileUri.toString());
+                            frag.show(getSupportFragmentManager().beginTransaction(), "tag");
                         }
-                        //get path/uri and write to databse right here
 
                     } else { // Result was a failure
                         Toast.makeText(this, "Picture wasn't taken!", Toast.LENGTH_SHORT).show();
@@ -148,54 +154,21 @@ public class MainActivity extends AppCompatActivity implements ImageTagDatabaseH
                     // if we are here, everything processed okay
 
                     if (requestCode == PICK_IMAGE_REQUEST) {
-                        // if we are here, we are hearing back from image gallery
-                        Uri takenPhoto = data.getData();
-                        TagEntryFragment frag = TagEntryFragment.newInstance(takenPhoto);
-                        frag.show(getSupportFragmentManager().beginTransaction(), "tag");
+                        Toast.makeText(this, "Picked from gallery!", Toast.LENGTH_SHORT).show();
 
-                        InputStream inputStream;
-                        try {
-                            //address of image on SD card
-                            inputStream = getContentResolver().openInputStream(takenPhoto);
-                            Bitmap image = BitmapFactory.decodeStream(inputStream);
-                            //image_adapter.addImage(image);
+                        Uri gallery_uri = data.getData();
 
-                        } catch (IOException ex) {
-                            System.out.println(ex);
-                            Toast.makeText(this, "Unable to open image", Toast.LENGTH_LONG).show();
+                        if (gallery_uri != null) {
+                            TagEntryFragment frag = TagEntryFragment.newInstance(gallery_uri.toString());
+                            frag.show(getSupportFragmentManager().beginTransaction(), "tag");
                         }
+
                     }
                 }
                 break;
 
         }
     }
-
-//    public Uri getPhotoFileUri(String fileName) {
-//
-//        // Only continue if the SD Card is mounted
-//        if (isExternalStorageAvailable()) {
-//            // Get safe storage directory for photos
-//            // Use `getExternalFilesDir` on Context to access package-specific directories.
-//            // This way, we don't need to request external read/write runtime permissions.
-//            File mediaStorageDir = new File(
-//                    getExternalFilesDir(Environment.DIRECTORY_PICTURES), APP_TAG);
-//
-//            // Create the storage directory if it does not exist
-//            if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
-//                Log.d(APP_TAG, "failed to create directory");
-//            }
-//            File file = new File(mediaStorageDir.getPath() + File.separator + fileName);
-//            return FileProvider.getUriForFile(MainActivity.this, "com.codepath.fileprovider", file);
-//        }
-//        return null;
-//    }
-//
-//    // Returns true if external storage for photos is available
-//    private boolean isExternalStorageAvailable() {
-//        String state = Environment.getExternalStorageState();
-//        return state.equals(Environment.MEDIA_MOUNTED);
-//    }
 
 
     @Override
@@ -280,16 +253,14 @@ public class MainActivity extends AppCompatActivity implements ImageTagDatabaseH
                                             if (!ImageTagDatabaseHelper.GetInstance().checkLinkExist(imageId, tagId)) {
                                                 ImageTagDatabaseHelper.GetInstance().addLink(imageId, tagId);
                                             }
-//
-//                                            Log.d("LOOKHERE", String.format("Inserted link with \n\tImage: (%s, %s)\n\tTag: (%s, %s)\n",
-//                                                    imageId, Uri.parse(fileName).getLastPathSegment(), tagId, tag));
-//
-//                                            String[] tagQuery = new String[] { tag };
-//                                            List<String> imageUris = ImageTagDatabaseHelper.GetInstance().getImagesWithTag(tagQuery);
-//                                            Log.d("LOOKHERE", "Got " + imageUris.size() + " images");
+
+                                            Log.d("LOOKHERE", String.format("Inserted link with \n\tImage: (%s, %s)\n\tTag: (%s, %s)\n",
+                                                    imageId, Uri.parse(filePath).getLastPathSegment(), tagId, tag));
+
+                                            String[] tagQuery = new String[] { tag };
+                                            List<String> imageUris = ImageTagDatabaseHelper.GetInstance().getImagesWithTag(tagQuery);
+                                            Log.d("LOOKHERE", "Got " + imageUris.size() + " images");
                                         }
-
-
 
                                     }
                                 }
@@ -308,7 +279,7 @@ public class MainActivity extends AppCompatActivity implements ImageTagDatabaseH
 
     @Override
     public void OnDatabaseChange() {
-        Toast.makeText(this, "db", Toast.LENGTH_LONG).show();
+        Log.d("LOOKHERE", "DB CHANGE");
         getBitmapFromDb();
     }
 
@@ -326,3 +297,87 @@ public class MainActivity extends AppCompatActivity implements ImageTagDatabaseH
 //http://stackoverflow.com/questions/24682217/get-bitmap-from-imageview-loaded-with-picasso
 //https://guides.codepath.com/android/using-the-recyclerview
 //http://www.androidhive.info/2011/11/android-sqlite-database-tutorial/
+
+
+
+//    public Uri getPhotoFileUri(String fileName) {
+//
+//        // Only continue if the SD Card is mounted
+//        if (isExternalStorageAvailable()) {
+//            // Get safe storage directory for photos
+//            // Use `getExternalFilesDir` on Context to access package-specific directories.
+//            // This way, we don't need to request external read/write runtime permissions.
+//            File mediaStorageDir = new File(
+//                    getExternalFilesDir(Environment.DIRECTORY_PICTURES), APP_TAG);
+//
+//            // Create the storage directory if it does not exist
+//            if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
+//                Log.d(APP_TAG, "failed to create directory");
+//            }
+//            File file = new File(mediaStorageDir.getPath() + File.separator + fileName);
+//            return FileProvider.getUriForFile(MainActivity.this, "com.codepath.fileprovider", file);
+//        }
+//        return null;
+//    }
+//
+//    // Returns true if external storage for photos is available
+//    private boolean isExternalStorageAvailable() {
+//        String state = Environment.getExternalStorageState();
+//        return state.equals(Environment.MEDIA_MOUNTED);
+//    }
+
+
+//                        File mediaStorageDir = new File(
+//                                getExternalFilesDir(Environment.DIRECTORY_PICTURES), APP_TAG);
+//
+//                        // Return the file target for the photo based on filename
+//                        File file = new File(mediaStorageDir.getPath() + File.separator + photoFileName);
+//Uri takenPhoto = data.getData();
+
+//String filePath = getFilesDir() + IMAGE_PATH + "Test"+ counter + ".jpg";
+//                        String filePath = Environment.getExternalStorageDirectory().getAbsolutePath() + IMAGE_PATH +  counter + ".jpg";
+//                        OutputStream stream = null;
+//                        try {
+//                            File file = new File(filePath);
+//                            if (!file.exists()) {
+//                                file.getParentFile().mkdirs();
+//                            }
+//                            Bitmap bitmap = BitmapFactory.decodeFile(file.getName());
+//                            stream = new FileOutputStream(new File(filePath));
+//                            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+//                            stream.flush();
+//                            stream.close();
+//                        } catch (IOException e) {
+//                            e.printStackTrace();
+//                        }
+
+//                        InputStream inputStream;
+//                        try {
+//                            //address of image on SD card
+//                            inputStream = getContentResolver().openInputStream(takenPhoto);
+//                            Bitmap image = BitmapFactory.decodeStream(inputStream);
+//                            //image_adapter.addImage(image);
+//
+//                        } catch (IOException ex) {
+//                            System.out.println(ex);
+//                            Toast.makeText(this, "Unable to open image", Toast.LENGTH_LONG).show();
+//                        }
+//get path/uri and write to databse right here
+
+//
+//    // if we are here, we are hearing back from image gallery
+//    Uri takenPhoto = data.getData();
+//    //TagEntryFragment frag = TagEntryFragment.newInstance(takenPhoto);
+//    //frag.show(getSupportFragmentManager().beginTransaction(), "tag");
+//
+//    InputStream inputStream;
+//                        try {
+//                                //address of image on SD card
+//                                inputStream = getContentResolver().openInputStream(takenPhoto);
+//                                Bitmap image = BitmapFactory.decodeStream(inputStream);
+//                                //image_adapter.addImage(image);
+//
+//                                } catch (IOException ex) {
+//                                System.out.println(ex);
+//                                Toast.makeText(this, "Unable to open image", Toast.LENGTH_LONG).show();
+//                                }

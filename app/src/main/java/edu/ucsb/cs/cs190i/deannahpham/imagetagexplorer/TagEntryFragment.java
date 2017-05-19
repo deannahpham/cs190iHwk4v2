@@ -1,11 +1,14 @@
 package edu.ucsb.cs.cs190i.deannahpham.imagetagexplorer;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,7 +19,12 @@ import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by Deanna on 5/15/17.
@@ -25,16 +33,19 @@ import java.util.ArrayList;
 public class TagEntryFragment extends android.support.v4.app.DialogFragment {
     ArrayList<String> tagsList;
 
+    //ImageAdapter image_adapter = new ImageAdapter(getActivity());
+
+
     private AutoCompleteTextView tag_text;
     private ImageView tag_image;
     private Button add_tag;
     private Button add_image;
     private String add_tag_string;
 
-    public static TagEntryFragment newInstance(Uri uri) {
+    public static TagEntryFragment newInstance(String filePath) {
         TagEntryFragment frag = new TagEntryFragment();
         Bundle args = new Bundle();
-        args.putString("title", uri.toString());
+        args.putString("title", filePath); // i think i should pass the File then add file to db, then convert to bitmap to display, then add tag, then link... so instead of Uri, pass Stringfilename
         frag.setArguments(args);
         return frag;
     }
@@ -55,14 +66,14 @@ public class TagEntryFragment extends android.support.v4.app.DialogFragment {
         add_tag = (Button)view.findViewById(R.id.add_tag_button);
         //add_image = (Button)view.findViewById(R.id.add_image_button);
 
-        String title = getArguments().getString("title", "Enter Name");
-        Uri uri = Uri.parse((String)getArguments().get("title"));
+
+        final Uri uri = Uri.parse((String)getArguments().get("title"));
+        //Picasso.with(getActivity()).load(new File(uri.getPath())).resize(500,500).centerCrop().into(tag_image);
         Picasso.with(getActivity()).load(uri).resize(500,500).centerCrop().into(tag_image);
-        getDialog().setTitle(title);
         tag_text.requestFocus();
 
+        //tagList recycler stuff
         tagsList = new ArrayList<>();
-
         RecyclerView rv_tag = (RecyclerView) view.findViewById(R.id.rv_tag);
         final TagAdapter tag_adapter = new TagAdapter(this.getActivity(), tagsList);
         rv_tag.setAdapter(tag_adapter);
@@ -75,17 +86,43 @@ public class TagEntryFragment extends android.support.v4.app.DialogFragment {
                 tagsList.add(add_tag_string);
                 tag_adapter.notifyDataSetChanged();
                 tag_text.setText("");
+
+                String filePath = getArguments().getString("title");
+
+                if (!ImageTagDatabaseHelper.GetInstance().checkImageExist(filePath)) {
+                    ImageTagDatabaseHelper.GetInstance().addImage(filePath);
+                }
+
+                int imageId = ImageTagDatabaseHelper.GetInstance().getImageId(filePath);
+
+                for(String tag : tagsList) {
+                    if (!ImageTagDatabaseHelper.GetInstance().checkTagExist(tag)) {
+                        ImageTagDatabaseHelper.GetInstance().addTag(tag);
+                    }
+
+                    int tagId = ImageTagDatabaseHelper.GetInstance().getTagId(tag);
+
+                    if (!ImageTagDatabaseHelper.GetInstance().checkLinkExist(imageId, tagId)) {
+                        ImageTagDatabaseHelper.GetInstance().addLink(imageId, tagId);
+                    }
+
+                    Log.d("LOOKHERE", String.format("Inserted link with \n\tImage: (%s, %s)\n\tTag: (%s, %s)\n",
+                            imageId, Uri.parse(filePath).getLastPathSegment(), tagId, tag));
+
+                    String[] tagQuery = new String[] { tag };
+                    List<String> imageUris = ImageTagDatabaseHelper.GetInstance().getImagesWithTag(tagQuery);
+                    Log.d("LOOKHERE", "Got tag" + tag);
+                    Log.d("LOOKHERE", "Got " + imageUris.size() + " images");// why 0?
+                }
+                //ImageTagDatabaseHelper.GetInstance().Subscribe(new TagEntryFragment());
+                //image_adapter.setImageUris(ImageTagDatabaseHelper.GetInstance().getAllImages());
+                getDialog().dismiss();
+
             }
         });
 
-//        add_image.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                Toast.makeText(getContext(), "ADD IMAGE AND TAG TO DATABASE!", Toast.LENGTH_SHORT).show();
-//
-//            }
-//        });
-
-
     }
+
+
+
 }
