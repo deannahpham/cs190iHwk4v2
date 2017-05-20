@@ -243,6 +243,7 @@ public class MainActivity extends AppCompatActivity implements ImageTagDatabaseH
                                     File file = new File(filePath);
                                     if (!file.exists()) {
                                         file.getParentFile().mkdirs();
+                                        currentFileUri = Uri.fromFile(file);
                                     }
 
                                     stream = new FileOutputStream(new File(filePath));
@@ -254,11 +255,13 @@ public class MainActivity extends AppCompatActivity implements ImageTagDatabaseH
                                     e.printStackTrace();
                                 }
 
-                                if (!ImageTagDatabaseHelper.GetInstance().checkImageExist(filePath)) {
-                                    ImageTagDatabaseHelper.GetInstance().addImage(filePath);
+
+
+                                if (!ImageTagDatabaseHelper.GetInstance().checkImageExist(currentFileUri.toString())) {
+                                    ImageTagDatabaseHelper.GetInstance().addImage(currentFileUri.toString());
                                 }
 
-                                int imageId = ImageTagDatabaseHelper.GetInstance().getImageId(filePath);
+                                int imageId = ImageTagDatabaseHelper.GetInstance().getImageId(currentFileUri.toString());
 
                                 for(String tag : image.tags) {
                                     if (!ImageTagDatabaseHelper.GetInstance().checkTagExist(tag)) {

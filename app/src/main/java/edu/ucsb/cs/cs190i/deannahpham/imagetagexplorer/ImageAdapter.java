@@ -63,16 +63,6 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder> 
         final View image_view = inflater.inflate(R.layout.grid_images, parent, false);
         ImageAdapter.ViewHolder viewHolder = new ImageAdapter.ViewHolder(image_view);
 
-//        final ImageView image = (ImageView)image_view.findViewById(R.id.imageView);
-//        image.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                counter ++;
-//                Toast.makeText(image_view.getContext(), "Clicked on an image!" , Toast.LENGTH_SHORT).show();
-//
-//            }
-//        });
-
         return viewHolder;
     }
 
