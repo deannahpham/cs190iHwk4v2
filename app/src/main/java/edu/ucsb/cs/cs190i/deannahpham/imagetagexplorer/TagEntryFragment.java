@@ -33,9 +33,6 @@ import java.util.List;
 public class TagEntryFragment extends android.support.v4.app.DialogFragment {
     ArrayList<String> tagsList;
 
-    //ImageAdapter image_adapter = new ImageAdapter(getActivity());
-
-
     private AutoCompleteTextView tag_text;
     private ImageView tag_image;
     private Button add_tag;
@@ -45,7 +42,7 @@ public class TagEntryFragment extends android.support.v4.app.DialogFragment {
     public static TagEntryFragment newInstance(String filePath) {
         TagEntryFragment frag = new TagEntryFragment();
         Bundle args = new Bundle();
-        args.putString("title", filePath); // i think i should pass the File then add file to db, then convert to bitmap to display, then add tag, then link... so instead of Uri, pass Stringfilename
+        args.putString("title", filePath);
         frag.setArguments(args);
         return frag;
     }
@@ -54,7 +51,6 @@ public class TagEntryFragment extends android.support.v4.app.DialogFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         return inflater.inflate(R.layout.tag, container);
-
     }
 
     @Override
@@ -68,7 +64,6 @@ public class TagEntryFragment extends android.support.v4.app.DialogFragment {
 
 
         final Uri uri = Uri.parse((String)getArguments().get("title"));
-        //Picasso.with(getActivity()).load(new File(uri.getPath())).resize(500,500).centerCrop().into(tag_image);
         Picasso.with(getActivity()).load(uri).resize(500,500).centerCrop().into(tag_image);
         tag_text.requestFocus();
 
@@ -106,23 +101,17 @@ public class TagEntryFragment extends android.support.v4.app.DialogFragment {
                         ImageTagDatabaseHelper.GetInstance().addLink(imageId, tagId);
                     }
 
+                    // For debugging purposes:
                     Log.d("LOOKHERE", String.format("Inserted link with \n\tImage: (%s, %s)\n\tTag: (%s, %s)\n",
                             imageId, Uri.parse(filePath).getLastPathSegment(), tagId, tag));
-
                     String[] tagQuery = new String[] { tag };
                     List<String> imageUris = ImageTagDatabaseHelper.GetInstance().getImagesWithTag(tagQuery);
                     Log.d("LOOKHERE", "Got tag" + tag);
-                    Log.d("LOOKHERE", "Got " + imageUris.size() + " images");// why 0?
-                }
-                //ImageTagDatabaseHelper.GetInstance().Subscribe(new TagEntryFragment());
-                //image_adapter.setImageUris(ImageTagDatabaseHelper.GetInstance().getAllImages());
-                getDialog().dismiss();
+                    Log.d("LOOKHERE", "Got " + imageUris.size() + " images");
 
+                }
+                getDialog().dismiss();
             }
         });
-
     }
-
-
-
 }

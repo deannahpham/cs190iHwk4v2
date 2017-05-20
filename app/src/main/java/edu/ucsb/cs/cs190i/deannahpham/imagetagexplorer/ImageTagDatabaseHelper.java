@@ -79,6 +79,13 @@ public class ImageTagDatabaseHelper extends SQLiteOpenHelper {
         void OnDatabaseChange();
     }
 
+    //HELP FROM: http://www.androidhive.info/2011/11/android-sqlite-database-tutorial/
+    //http://stackoverflow.com/questions/15010761/how-to-check-if-a-cursor-is-empty
+    //http://stackoverflow.com/questions/11461520/cursor-getint-throws-cursorindexoutofboundsexception
+    //http://stackoverflow.com/questions/8907729/how-to-delete-tables-and-database-using-sqiltehelper-in-android
+
+    //check functions to check if image, tag, or link exists already
+
     public boolean checkImageExist(String fileName) {
         return getImageId(fileName) != -1;
     }
@@ -97,16 +104,20 @@ public class ImageTagDatabaseHelper extends SQLiteOpenHelper {
         return cursor != null && cursor.getCount() > 0;
     }
 
+    // adding an image to the database via filename
+
     public void addImage(String filename){
         SQLiteDatabase db = this.getWritableDatabase();
 
-        ContentValues values = new ContentValues();
+        ContentValues values = new ContentValues(); // got this from this website above
         values.put("Uri", filename);
 
         db.insert("Image", null, values);
         db.close();
         NotifyListeners();
     }
+
+    //add tag into the database
 
     public void addTag(String tag){
         SQLiteDatabase db = this.getWritableDatabase();
@@ -119,6 +130,8 @@ public class ImageTagDatabaseHelper extends SQLiteOpenHelper {
         NotifyListeners();
     }
 
+    // now add a link between the image and the tag, given the imageId and tagId, which we will get from the next functions
+
     public void addLink(int id, int tag_id) {
         SQLiteDatabase db = this.getWritableDatabase();
 
@@ -130,6 +143,8 @@ public class ImageTagDatabaseHelper extends SQLiteOpenHelper {
         db.close();
         NotifyListeners();
     }
+
+    // function to get the imageId so that we can link it (to insert into link db) with tagId.
 
     public int getImageId(String filename) {
         SQLiteDatabase db = this.getReadableDatabase();
@@ -151,6 +166,8 @@ public class ImageTagDatabaseHelper extends SQLiteOpenHelper {
         return -1;
     }
 
+    //used this function to get all the images in the db to populate
+
     public List<String> getAllImages() {
         List<String> imageList = new ArrayList<String>();
         // Select All Query
@@ -159,18 +176,21 @@ public class ImageTagDatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
 
-        // looping through all rows and adding to list
         if (cursor.moveToFirst()) {
             do {
                 String imageUri = cursor.getString(1);
-                // Adding contact to list
                 imageList.add(imageUri);
             } while (cursor.moveToNext());
         }
 
-        // return contact list
         return imageList;
     }
+
+    // given a list of tags, get the images associated with the tag
+    // must first query for the tagId's associated with the given tags,
+    // from there I get the associated imageId's from the link table via tagId,
+    // then get the imageUri from the Image table from the imageId ,
+    // eventually returning a list of imageUri's associated with the string of tags.
 
     public List<String> getImagesWithTag(String[] tags) {
         if (tags == null || tags.length == 0) return new ArrayList<>();
@@ -189,11 +209,9 @@ public class ImageTagDatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = getWritableDatabase();
         Cursor cursor = db.rawQuery(tagIdQuery, null);
 
-        // looping through all rows and adding to list
         if (cursor.moveToFirst()) {
             do {
                 int tagId = cursor.getInt(0);
-                // Adding contact to list
                 tagIds.add(tagId);
             } while (cursor.moveToNext());
         }
@@ -212,11 +230,9 @@ public class ImageTagDatabaseHelper extends SQLiteOpenHelper {
         Log.d("LOOKAT_QUERY", "Query Image Id: " + imageIdQuery);
 
         cursor = db.rawQuery(tagIdQuery, null);
-        // looping through all rows and adding to list
         if (cursor.moveToFirst()) {
             do {
                 int imageId = cursor.getInt(0);
-                // Adding contact to list
                 imageIds.add(imageId);
             } while (cursor.moveToNext());
         }
@@ -247,5 +263,17 @@ public class ImageTagDatabaseHelper extends SQLiteOpenHelper {
 
         return imageUris;
     }
+
+//    public void clearDatabase() {
+//        SQLiteDatabase db = this.getWritableDatabase();
+//        db.execSQL("DROP TABLE IF EXISTS Image");
+//        db.execSQL("DROP TABLE IF EXISTS Tag");
+//        db.execSQL("DROP TABLE IF EXISTS Link");
+//
+//        db.close();
+//
+//        NotifyListeners();
+//
+//    }
 
 }

@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
+import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -21,6 +22,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AutoCompleteTextView;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -36,6 +38,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+
 
 public class MainActivity extends AppCompatActivity implements ImageTagDatabaseHelper.OnDatabaseChangeListener {
 
@@ -59,10 +62,13 @@ public class MainActivity extends AppCompatActivity implements ImageTagDatabaseH
 
     private Uri currentFileUri;
 
+    //public String[] tags;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
 
         ImageTagDatabaseHelper.Initialize(this);
 
@@ -89,7 +95,27 @@ public class MainActivity extends AppCompatActivity implements ImageTagDatabaseH
             }
         });
 
-        search_for_tag = tag.getText().toString();
+        // TODO: grab tag and query for all associating images
+        // TODO: click on image and be able to edit
+
+
+        Button find = (Button) findViewById(R.id.find_images);
+        find.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //ImageTagDatabaseHelper.GetInstance().getImagesWithTag(tagQuery);
+                search_for_tag = tag.getText().toString();
+                final String[] tagQuery = new String[] { search_for_tag };
+
+                List<String> imageUris = ImageTagDatabaseHelper.GetInstance().getImagesWithTag(tagQuery);
+
+                image_adapter.setImageUris(imageUris);
+
+                Log.d("LOOKHERE", "Tag: " + search_for_tag);
+                Log.d("LOOKHERE", "Got " + imageUris.size() + " images");
+                Log.d("LOOKHERE", "Got " + tagQuery.length + " images");
+            }
+        });
     }
 
 
@@ -110,23 +136,14 @@ public class MainActivity extends AppCompatActivity implements ImageTagDatabaseH
         startActivityForResult(imageIntent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
     }
 
+    // TODO: fix gallery File to URI to String thing -__-
     public void onGalleryClick(View view) {
         counter++;
         Intent galleryIntent = new Intent();
         galleryIntent.setType("image/*");
         galleryIntent.setAction(Intent.ACTION_GET_CONTENT);
 
-//        String filePath = getExternalFilesDir(Environment.DIRECTORY_PICTURES) + IMAGE_PATH + "photo_"+ counter + ".jpg";
-//
-//        //folder stuff
-//        File image = new File(filePath);
-//        image.getParentFile().mkdirs();
-//        currentFileUri = Uri.fromFile(image);
-//
-//        galleryIntent.putExtra(MediaStore.EXTRA_OUTPUT, currentFileUri);
-
         startActivityForResult(galleryIntent, PICK_IMAGE_REQUEST);
-
     }
 
     @Override
@@ -203,78 +220,82 @@ public class MainActivity extends AppCompatActivity implements ImageTagDatabaseH
         switch (item.getItemId()) {
             case R.id.populate:
                 Toast.makeText(this, "Populate selected", Toast.LENGTH_SHORT).show();
-
-
-
-                TaggedImageRetriever.getNumImages(new TaggedImageRetriever.ImageNumResultListener() {
-                    @Override
-                    public void onImageNum(int num) {
-                        for (int i = 0; i < num; i++) {
-                            //Toast.makeText(MainActivity.this, "num in databse: " + num, Toast.LENGTH_SHORT).show();
-
-                            final int I_CLOSURE = i;
-                            // this is referred to as an inner class closure. See, e.g. discussion at
-                            // http://stackoverflow.com/questions/2804923/how-does-java-implement-inner-class-closures
-
-                            TaggedImageRetriever.getTaggedImageByIndex(i, new TaggedImageRetriever.TaggedImageResultListener() {
-                                @Override
-                                public void onTaggedImage(TaggedImageRetriever.TaggedImage image) {
-                                    if (image != null) {
-                                        String filePath = getFilesDir() + IMAGE_PATH + "Test"+ I_CLOSURE + ".jpg";
-                                        OutputStream stream = null;
-                                        try {
-                                            File file = new File(filePath);
-                                            if (!file.exists()) {
-                                                file.getParentFile().mkdirs();
-                                            }
-
-                                            stream = new FileOutputStream(new File(filePath));
-                                            image.image.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-                                            image.image.recycle();
-                                            stream.flush();
-                                            stream.close();
-                                        } catch (IOException e) {
-                                            e.printStackTrace();
-                                        }
-
-                                        if (!ImageTagDatabaseHelper.GetInstance().checkImageExist(filePath)) {
-                                            ImageTagDatabaseHelper.GetInstance().addImage(filePath);
-                                        }
-
-                                        int imageId = ImageTagDatabaseHelper.GetInstance().getImageId(filePath);
-
-                                        for(String tag : image.tags) {
-                                            if (!ImageTagDatabaseHelper.GetInstance().checkTagExist(tag)) {
-                                                ImageTagDatabaseHelper.GetInstance().addTag(tag);
-                                            }
-
-                                            int tagId = ImageTagDatabaseHelper.GetInstance().getTagId(tag);
-
-                                            if (!ImageTagDatabaseHelper.GetInstance().checkLinkExist(imageId, tagId)) {
-                                                ImageTagDatabaseHelper.GetInstance().addLink(imageId, tagId);
-                                            }
-
-                                            Log.d("LOOKHERE", String.format("Inserted link with \n\tImage: (%s, %s)\n\tTag: (%s, %s)\n",
-                                                    imageId, Uri.parse(filePath).getLastPathSegment(), tagId, tag));
-
-                                            String[] tagQuery = new String[] { tag };
-                                            List<String> imageUris = ImageTagDatabaseHelper.GetInstance().getImagesWithTag(tagQuery);
-                                            Log.d("LOOKHERE", "Got " + imageUris.size() + " images");
-                                        }
-
-                                    }
-                                }
-                            });
-                        }
-                    }
-                });
-
+                fromServer();
                 break;
             case R.id.clear:
                 Toast.makeText(this, "Clear selected", Toast.LENGTH_SHORT).show();
+                //http://stackoverflow.com/questions/14727226/android-how-to-remove-files-from-external-storage
+                // remove from external storage, and then clear database
+                //TODO: check if clearing works, need to delete from external storage, and clear database
+                //ImageTagDatabaseHelper.GetInstance().clearDatabase();
                 break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public void fromServer() {
+        TaggedImageRetriever.getNumImages(new TaggedImageRetriever.ImageNumResultListener() {
+            @Override
+            public void onImageNum(int num) {
+                for (int i = 0; i < num; i++) {
+                    //Toast.makeText(MainActivity.this, "num in databse: " + num, Toast.LENGTH_SHORT).show();
+
+                    final int I_CLOSURE = i;
+                    // this is referred to as an inner class closure. See, e.g. discussion at
+                    // http://stackoverflow.com/questions/2804923/how-does-java-implement-inner-class-closures
+
+                    TaggedImageRetriever.getTaggedImageByIndex(i, new TaggedImageRetriever.TaggedImageResultListener() {
+                        @Override
+                        public void onTaggedImage(TaggedImageRetriever.TaggedImage image) {
+                            if (image != null) {
+                                String filePath = getFilesDir() + IMAGE_PATH + "Test"+ I_CLOSURE + ".jpg";
+                                OutputStream stream = null;
+                                try {
+                                    File file = new File(filePath);
+                                    if (!file.exists()) {
+                                        file.getParentFile().mkdirs();
+                                    }
+
+                                    stream = new FileOutputStream(new File(filePath));
+                                    image.image.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+                                    image.image.recycle();
+                                    stream.flush();
+                                    stream.close();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+
+                                if (!ImageTagDatabaseHelper.GetInstance().checkImageExist(filePath)) {
+                                    ImageTagDatabaseHelper.GetInstance().addImage(filePath);
+                                }
+
+                                int imageId = ImageTagDatabaseHelper.GetInstance().getImageId(filePath);
+
+                                for(String tag : image.tags) {
+                                    if (!ImageTagDatabaseHelper.GetInstance().checkTagExist(tag)) {
+                                        ImageTagDatabaseHelper.GetInstance().addTag(tag);
+                                    }
+
+                                    int tagId = ImageTagDatabaseHelper.GetInstance().getTagId(tag);
+
+                                    if (!ImageTagDatabaseHelper.GetInstance().checkLinkExist(imageId, tagId)) {
+                                        ImageTagDatabaseHelper.GetInstance().addLink(imageId, tagId);
+                                    }
+
+                                    Log.d("LOOKHERE", String.format("Inserted link with \n\tImage: (%s, %s)\n\tTag: (%s, %s)\n",
+                                            imageId, Uri.parse(filePath).getLastPathSegment(), tagId, tag));
+
+                                    String[] tagQuery = new String[] { tag };
+                                    List<String> imageUris = ImageTagDatabaseHelper.GetInstance().getImagesWithTag(tagQuery);
+                                    Log.d("LOOKHERE", "Got " + imageUris.size() + " images");
+                                }
+
+                            }
+                        }
+                    });
+                }
+            }
+        });
     }
 
     @Override
@@ -297,6 +318,7 @@ public class MainActivity extends AppCompatActivity implements ImageTagDatabaseH
 //http://stackoverflow.com/questions/24682217/get-bitmap-from-imageview-loaded-with-picasso
 //https://guides.codepath.com/android/using-the-recyclerview
 //http://www.androidhive.info/2011/11/android-sqlite-database-tutorial/
+//http://stackoverflow.com/questions/12995185/android-taking-photos-and-saving-them-with-a-custom-name-to-a-custom-destinati
 
 
 
@@ -381,3 +403,12 @@ public class MainActivity extends AppCompatActivity implements ImageTagDatabaseH
 //                                System.out.println(ex);
 //                                Toast.makeText(this, "Unable to open image", Toast.LENGTH_LONG).show();
 //                                }
+
+//        String filePath = getExternalFilesDir(Environment.DIRECTORY_PICTURES) + IMAGE_PATH + "photo_"+ counter + ".jpg";
+//
+//        //folder stuff
+//        File image = new File(filePath);
+//        image.getParentFile().mkdirs();
+//        currentFileUri = Uri.fromFile(image);
+//
+//        galleryIntent.putExtra(MediaStore.EXTRA_OUTPUT, currentFileUri);

@@ -4,8 +4,10 @@ import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.media.Image;
 import android.net.Uri;
+import android.os.Environment;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -19,8 +21,10 @@ import com.squareup.picasso.Picasso;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,36 +35,47 @@ import static edu.ucsb.cs.cs190i.deannahpham.imagetagexplorer.R.id.tags;
  */
 
 public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder> {
-    private final Context context;
+    public final Context context;
     private List<String> imageUriList;
+    private static final String IMAGE_PATH = "/deanna/images/";
+    public int counter = 100;
+
 
     public ImageAdapter(Context context){
         this.context = context;
-        //ImageTagDatabaseHelper.GetInstance().Subscribe(this);
     }
 
     public void setImageUris(List<String> imageUriList) {
         this.imageUriList = imageUriList;
-
         Log.d("LOOKHERE", "Setting new list of imageUris: size=" + imageUriList.size());
-
         notifyDataSetChanged();
     }
 
     @Override
     public ImageAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        Context context = parent.getContext();
+        final Context context = parent.getContext();
         LayoutInflater inflater = LayoutInflater.from(context);
 
-        View image_view = inflater.inflate(R.layout.grid_images, parent, false);
+        final View image_view = inflater.inflate(R.layout.grid_images, parent, false);
         ImageAdapter.ViewHolder viewHolder = new ImageAdapter.ViewHolder(image_view);
+
+        final ImageView image = (ImageView)image_view.findViewById(R.id.imageView);
+        image.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                counter ++;
+                Toast.makeText(image_view.getContext(), "Clicked on an image!" + image.getId(), Toast.LENGTH_SHORT).show();
+
+            }
+        });
+
         return viewHolder;
     }
 
     @Override
     public void onBindViewHolder(ImageAdapter.ViewHolder holder, int position) {
         Uri uri = Uri.parse(imageUriList.get(position));
-        Picasso.with(holder.itemView.getContext()).load(new File(uri.getPath())).resize(240, 120).into(holder.image);
+        Picasso.with(holder.itemView.getContext()).load(new File(uri.getPath())).resize(500, 500).into(holder.image);
 
 
 //        if ("content".equals(uri.getScheme())) {

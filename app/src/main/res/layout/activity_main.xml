@@ -14,7 +14,9 @@
         android:layout_marginTop="8dp"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"/>
+        app:layout_constraintLeft_toLeftOf="parent"
+        tools:layout_constraintRight_creator="1"
+        tools:layout_constraintLeft_creator="1" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/gallery_fab"
@@ -52,7 +54,8 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        tools:layout_constraintRight_creator="1" />
+        tools:layout_constraintRight_creator="1"
+        app:layout_constraintHorizontal_bias="1.0" />
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/rv_image"
@@ -61,6 +64,21 @@
         app:layout_constraintLeft_toLeftOf="@+id/tag"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tag"
-        app:layout_constraintBottom_toBottomOf="parent"/>
+        app:layout_constraintBottom_toBottomOf="parent"
+        tools:layout_constraintTop_creator="1"
+        tools:layout_constraintBottom_creator="1"
+        android:layout_marginTop="145dp"
+        android:layout_marginBottom="144dp" />
+
+    <Button
+        android:id="@+id/find_images"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Find"
+        tools:layout_constraintTop_creator="1"
+        tools:layout_constraintRight_creator="1"
+        android:layout_marginEnd="23dp"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/tag" />
 
 </android.support.constraint.ConstraintLayout>
