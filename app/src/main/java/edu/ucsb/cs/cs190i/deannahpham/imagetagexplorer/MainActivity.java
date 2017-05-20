@@ -52,8 +52,6 @@ public class MainActivity extends AppCompatActivity implements ImageTagDatabaseH
     public AutoCompleteTextView tag;
     public String search_for_tag;
 
-    public final String APP_TAG = "MyCustomApp";
-    public String photoFileName;
     private static final int PICK_IMAGE_REQUEST = 9876;
     public final static int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 1034;
 
@@ -61,8 +59,6 @@ public class MainActivity extends AppCompatActivity implements ImageTagDatabaseH
     public static ImageAdapter image_adapter = new ImageAdapter(c);
 
     private Uri currentFileUri;
-
-    //public String[] tags;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,7 +91,6 @@ public class MainActivity extends AppCompatActivity implements ImageTagDatabaseH
             }
         });
 
-        // TODO: grab tag and query for all associating images
         // TODO: click on image and be able to edit
 
 
@@ -103,7 +98,6 @@ public class MainActivity extends AppCompatActivity implements ImageTagDatabaseH
         find.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //ImageTagDatabaseHelper.GetInstance().getImagesWithTag(tagQuery);
                 search_for_tag = tag.getText().toString();
                 final String[] tagQuery = new String[] { search_for_tag };
 
@@ -192,7 +186,7 @@ public class MainActivity extends AppCompatActivity implements ImageTagDatabaseH
     protected void onResume() {
         super.onResume();
         ImageTagDatabaseHelper.GetInstance().Subscribe(this);
-        getBitmapFromDb();
+        image_adapter.setImageUris(ImageTagDatabaseHelper.GetInstance().getAllImages());
     }
 
 
@@ -224,10 +218,7 @@ public class MainActivity extends AppCompatActivity implements ImageTagDatabaseH
                 break;
             case R.id.clear:
                 Toast.makeText(this, "Clear selected", Toast.LENGTH_SHORT).show();
-                //http://stackoverflow.com/questions/14727226/android-how-to-remove-files-from-external-storage
-                // remove from external storage, and then clear database
-                //TODO: check if clearing works, need to delete from external storage, and clear database
-                //ImageTagDatabaseHelper.GetInstance().clearDatabase();
+                ImageTagDatabaseHelper.GetInstance().clearDatabase();
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -238,8 +229,6 @@ public class MainActivity extends AppCompatActivity implements ImageTagDatabaseH
             @Override
             public void onImageNum(int num) {
                 for (int i = 0; i < num; i++) {
-                    //Toast.makeText(MainActivity.this, "num in databse: " + num, Toast.LENGTH_SHORT).show();
-
                     final int I_CLOSURE = i;
                     // this is referred to as an inner class closure. See, e.g. discussion at
                     // http://stackoverflow.com/questions/2804923/how-does-java-implement-inner-class-closures
@@ -301,12 +290,9 @@ public class MainActivity extends AppCompatActivity implements ImageTagDatabaseH
     @Override
     public void OnDatabaseChange() {
         Log.d("LOOKHERE", "DB CHANGE");
-        getBitmapFromDb();
-    }
-
-    public void getBitmapFromDb() {
         image_adapter.setImageUris(ImageTagDatabaseHelper.GetInstance().getAllImages());
     }
+
 }
 
 //HELP FROM: http://www.cs.ucsb.edu/~holl/CS190I/handouts/slides_camera-17.pdf
@@ -319,96 +305,4 @@ public class MainActivity extends AppCompatActivity implements ImageTagDatabaseH
 //https://guides.codepath.com/android/using-the-recyclerview
 //http://www.androidhive.info/2011/11/android-sqlite-database-tutorial/
 //http://stackoverflow.com/questions/12995185/android-taking-photos-and-saving-them-with-a-custom-name-to-a-custom-destinati
-
-
-
-//    public Uri getPhotoFileUri(String fileName) {
-//
-//        // Only continue if the SD Card is mounted
-//        if (isExternalStorageAvailable()) {
-//            // Get safe storage directory for photos
-//            // Use `getExternalFilesDir` on Context to access package-specific directories.
-//            // This way, we don't need to request external read/write runtime permissions.
-//            File mediaStorageDir = new File(
-//                    getExternalFilesDir(Environment.DIRECTORY_PICTURES), APP_TAG);
-//
-//            // Create the storage directory if it does not exist
-//            if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
-//                Log.d(APP_TAG, "failed to create directory");
-//            }
-//            File file = new File(mediaStorageDir.getPath() + File.separator + fileName);
-//            return FileProvider.getUriForFile(MainActivity.this, "com.codepath.fileprovider", file);
-//        }
-//        return null;
-//    }
-//
-//    // Returns true if external storage for photos is available
-//    private boolean isExternalStorageAvailable() {
-//        String state = Environment.getExternalStorageState();
-//        return state.equals(Environment.MEDIA_MOUNTED);
-//    }
-
-
-//                        File mediaStorageDir = new File(
-//                                getExternalFilesDir(Environment.DIRECTORY_PICTURES), APP_TAG);
-//
-//                        // Return the file target for the photo based on filename
-//                        File file = new File(mediaStorageDir.getPath() + File.separator + photoFileName);
-//Uri takenPhoto = data.getData();
-
-//String filePath = getFilesDir() + IMAGE_PATH + "Test"+ counter + ".jpg";
-//                        String filePath = Environment.getExternalStorageDirectory().getAbsolutePath() + IMAGE_PATH +  counter + ".jpg";
-//                        OutputStream stream = null;
-//                        try {
-//                            File file = new File(filePath);
-//                            if (!file.exists()) {
-//                                file.getParentFile().mkdirs();
-//                            }
-//                            Bitmap bitmap = BitmapFactory.decodeFile(file.getName());
-//                            stream = new FileOutputStream(new File(filePath));
-//                            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-//                            stream.flush();
-//                            stream.close();
-//                        } catch (IOException e) {
-//                            e.printStackTrace();
-//                        }
-
-//                        InputStream inputStream;
-//                        try {
-//                            //address of image on SD card
-//                            inputStream = getContentResolver().openInputStream(takenPhoto);
-//                            Bitmap image = BitmapFactory.decodeStream(inputStream);
-//                            //image_adapter.addImage(image);
-//
-//                        } catch (IOException ex) {
-//                            System.out.println(ex);
-//                            Toast.makeText(this, "Unable to open image", Toast.LENGTH_LONG).show();
-//                        }
-//get path/uri and write to databse right here
-
-//
-//    // if we are here, we are hearing back from image gallery
-//    Uri takenPhoto = data.getData();
-//    //TagEntryFragment frag = TagEntryFragment.newInstance(takenPhoto);
-//    //frag.show(getSupportFragmentManager().beginTransaction(), "tag");
-//
-//    InputStream inputStream;
-//                        try {
-//                                //address of image on SD card
-//                                inputStream = getContentResolver().openInputStream(takenPhoto);
-//                                Bitmap image = BitmapFactory.decodeStream(inputStream);
-//                                //image_adapter.addImage(image);
-//
-//                                } catch (IOException ex) {
-//                                System.out.println(ex);
-//                                Toast.makeText(this, "Unable to open image", Toast.LENGTH_LONG).show();
-//                                }
-
-//        String filePath = getExternalFilesDir(Environment.DIRECTORY_PICTURES) + IMAGE_PATH + "photo_"+ counter + ".jpg";
-//
-//        //folder stuff
-//        File image = new File(filePath);
-//        image.getParentFile().mkdirs();
-//        currentFileUri = Uri.fromFile(image);
-//
-//        galleryIntent.putExtra(MediaStore.EXTRA_OUTPUT, currentFileUri);
+//http://stackoverflow.com/questions/22243405/show-menu-item-always-in-support-action-bar

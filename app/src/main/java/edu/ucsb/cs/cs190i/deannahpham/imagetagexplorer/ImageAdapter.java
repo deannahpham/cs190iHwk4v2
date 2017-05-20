@@ -1,5 +1,6 @@
 package edu.ucsb.cs.cs190i.deannahpham.imagetagexplorer;
 
+import android.app.FragmentManager;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -8,6 +9,8 @@ import android.graphics.Color;
 import android.media.Image;
 import android.net.Uri;
 import android.os.Environment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -16,7 +19,8 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-
+import android.support.v4.app.Fragment;
+import android.app.FragmentTransaction;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
@@ -59,41 +63,39 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ViewHolder> 
         final View image_view = inflater.inflate(R.layout.grid_images, parent, false);
         ImageAdapter.ViewHolder viewHolder = new ImageAdapter.ViewHolder(image_view);
 
-        final ImageView image = (ImageView)image_view.findViewById(R.id.imageView);
-        image.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                counter ++;
-                Toast.makeText(image_view.getContext(), "Clicked on an image!" + image.getId(), Toast.LENGTH_SHORT).show();
-
-            }
-        });
+//        final ImageView image = (ImageView)image_view.findViewById(R.id.imageView);
+//        image.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                counter ++;
+//                Toast.makeText(image_view.getContext(), "Clicked on an image!" , Toast.LENGTH_SHORT).show();
+//
+//            }
+//        });
 
         return viewHolder;
     }
 
     @Override
     public void onBindViewHolder(ImageAdapter.ViewHolder holder, int position) {
-        Uri uri = Uri.parse(imageUriList.get(position));
-        Picasso.with(holder.itemView.getContext()).load(new File(uri.getPath())).resize(500, 500).into(holder.image);
+        final Uri uri = Uri.parse(imageUriList.get(position));
+        Picasso.with(holder.itemView.getContext()).load(new File(uri.getPath())).resize(500, 500).centerCrop().into(holder.image);
 
+        if ("content".equals(uri.getScheme())) {
+            Picasso.with(context).load(uri).resize(500, 500).centerCrop().into(holder.image);
+        }
 
-//        if ("content".equals(uri.getScheme())) {
-//            try {
-//                InputStream inputStream = holder.itemView.getContext().getContentResolver().openInputStream(uri);
-//                holder.image.setImageBitmap(BitmapFactory.decodeStream(inputStream));
-//            } catch (FileNotFoundException e) {
-//                e.printStackTrace();
-//            }
-//        } else {
-//            Picasso.with(holder.itemView.getContext()).load(new File(uri.getPath())).resize(240, 120).into(holder.image);
-//        }
+        final ImageView image = (ImageView)holder.itemView.findViewById(R.id.imageView);
+        image.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                counter ++;
+                Toast.makeText(image.getContext(), "Clicked on an image!" , Toast.LENGTH_SHORT).show();
+                TagEntryFragment frag = TagEntryFragment.newInstance(uri.toString());
+                frag.show(((MainActivity) v.getContext()).getSupportFragmentManager().beginTransaction(), "tag");
 
-        //Picasso.with(context).load(imageUri).resize(240, 120).into(holder.image);
-        //Picasso.with(holder.itemView.getContext()).load(Uri.parse(imageUri)).resize(240, 120).into(holder.image);
-//        Bitmap bitmap = BitmapFactory.decodeFile(imageUri);
-//        holder.image.setImageBitmap(bitmap);
-
+            }
+        });
     }
 
     @Override

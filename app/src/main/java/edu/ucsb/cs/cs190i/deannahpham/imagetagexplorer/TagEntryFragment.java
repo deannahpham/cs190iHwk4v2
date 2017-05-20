@@ -36,7 +36,6 @@ public class TagEntryFragment extends android.support.v4.app.DialogFragment {
     private AutoCompleteTextView tag_text;
     private ImageView tag_image;
     private Button add_tag;
-    private Button add_image;
     private String add_tag_string;
 
     public static TagEntryFragment newInstance(String filePath) {

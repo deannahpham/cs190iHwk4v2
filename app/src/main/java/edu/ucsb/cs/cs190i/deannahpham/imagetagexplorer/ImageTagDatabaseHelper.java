@@ -83,6 +83,7 @@ public class ImageTagDatabaseHelper extends SQLiteOpenHelper {
     //http://stackoverflow.com/questions/15010761/how-to-check-if-a-cursor-is-empty
     //http://stackoverflow.com/questions/11461520/cursor-getint-throws-cursorindexoutofboundsexception
     //http://stackoverflow.com/questions/8907729/how-to-delete-tables-and-database-using-sqiltehelper-in-android
+    //https://www.w3schools.com/sql/sql_delete.asp
 
     //check functions to check if image, tag, or link exists already
 
@@ -169,7 +170,7 @@ public class ImageTagDatabaseHelper extends SQLiteOpenHelper {
     //used this function to get all the images in the db to populate
 
     public List<String> getAllImages() {
-        List<String> imageList = new ArrayList<String>();
+        List<String> imageList = new ArrayList<>();
         // Select All Query
         String selectQuery = "SELECT  * FROM " + "Image";
 
@@ -229,7 +230,7 @@ public class ImageTagDatabaseHelper extends SQLiteOpenHelper {
 
         Log.d("LOOKAT_QUERY", "Query Image Id: " + imageIdQuery);
 
-        cursor = db.rawQuery(tagIdQuery, null);
+        cursor = db.rawQuery(imageIdQuery, null);
         if (cursor.moveToFirst()) {
             do {
                 int imageId = cursor.getInt(0);
@@ -264,16 +265,15 @@ public class ImageTagDatabaseHelper extends SQLiteOpenHelper {
         return imageUris;
     }
 
-//    public void clearDatabase() {
-//        SQLiteDatabase db = this.getWritableDatabase();
-//        db.execSQL("DROP TABLE IF EXISTS Image");
-//        db.execSQL("DROP TABLE IF EXISTS Tag");
-//        db.execSQL("DROP TABLE IF EXISTS Link");
-//
-//        db.close();
-//
-//        NotifyListeners();
-//
-//    }
+    public void clearDatabase() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL("DELETE FROM Image");
+        db.execSQL("DELETE FROM Tag");
+        db.execSQL("DELETE FROM Link");
+
+        db.close();
+        NotifyListeners();
+
+    }
 
 }

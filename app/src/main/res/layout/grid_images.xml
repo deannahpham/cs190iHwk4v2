@@ -8,6 +8,9 @@
 
     <ImageView
         android:id="@+id/imageView"
+        android:paddingTop="30dp"
+        android:paddingRight="15dp"
+        android:paddingLeft="15dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
